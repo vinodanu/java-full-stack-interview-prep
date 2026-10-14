@@ -1,0 +1,19 @@
+name: Validate study material
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Check animation controls
+        run: node scripts/check-animations.cjs
+      - name: Check local links
+        run: node scripts/check-links.cjs
