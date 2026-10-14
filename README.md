@@ -2,6 +2,8 @@
 
 A Java 17 interview preparation guide tailored to Vinod Kumar Anantha's four-plus years of banking, fintech, and capital-markets experience. It covers backend and full stack topics, practical code, interview answers, system design, and eight interactive browser animations.
 
+https://vinodanu.github.io/java-full-stack-interview-prep/
+
 ## Start here
 
 1. Read the [profile and achievement evidence checklist](docs/profile-and-evidence.md).
