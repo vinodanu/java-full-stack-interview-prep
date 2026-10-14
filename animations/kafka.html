@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kafka group rebalancing</title>
+<style>
+body{font:16px system-ui;background:#101827;color:#eef3ff;max-width:1000px;margin:32px auto;padding:16px}
+button{padding:10px 16px;margin:4px;cursor:pointer} #stage{display:flex;gap:16px;flex-wrap:wrap;margin:24px 0}
+section{background:#1e2b42;padding:16px;border-radius:12px;flex:1;min-width:180px}
+.node{padding:12px;margin:8px 0;background:#314967;border-radius:6px;white-space:pre-wrap;transition:background .4s}
+.active{background:#12674f} #caption{min-height:60px} small{color:#bdcce5}
+</style>
+<h1>Kafka group rebalancing</h1><button id="play">Play</button><button id="pause">Pause</button><button id="step">Step</button><button id="reset">Reset</button>
+<div id="stage" aria-label="Animation diagram"></div><p id="caption" aria-live="polite"></p><small>Illustrative classic eager rebalance for six partitions. Cooperative/new protocols can move fewer partitions.</small>
+<script>
+const frames=[{"caption":"C1 owns all six partitions in group compliance.","lanes":[["C1",["*P0 P1 P2 P3 P4 P5"]],["Broker",["Committed offsets persist per group/partition"]]]},{"caption":"C2 joins. Coordinator starts a new group generation.","lanes":[["Coordinator",["*Join / synchronize"]],["C1",["P0 P1 P2 P3 P4 P5"]],["C2",["Waiting"]]]},{"caption":"Revoke ownership; finish or stop in-flight work and commit completed offsets where possible.","lanes":[["C1",["*Revoked: P0–P5"]],["C2",["Waiting"]]]},{"caption":"Assignor distributes partitions; each partition has one owner in this group.","lanes":[["C1",["*P0 P1 P2"]],["C2",["*P3 P4 P5"]]]},{"caption":"Both consumers resume from committed offsets. Uncommitted work can replay.","lanes":[["C1",["*Consume P0–P2"]],["C2",["*Consume P3–P5"]]]},{"caption":"C2 fails; after failure detection another rebalance occurs.","lanes":[["C1",["P0 P1 P2"]],["C2",["*Offline"]],["Coordinator",["*Detect lost member"]]]},{"caption":"C1 now owns P0–P5 and resumes from committed positions.","lanes":[["C1",["*P0 P1 P2 P3 P4 P5"]],["Application",["Deduplicate side effects by event ID"]]]}];
+let i=0,timer=null;
+const stage=document.getElementById('stage'),caption=document.getElementById('caption');
+function draw(){stage.replaceChildren();const f=frames[i];f.lanes.forEach(([name,items])=>{
+const lane=document.createElement('section'),h=document.createElement('h2');h.textContent=name;lane.append(h);
+items.forEach(text=>{const n=document.createElement('div');n.className='node'+(text.startsWith('*')?' active':'');n.textContent=text.replace(/^\*/,'');lane.append(n)});stage.append(lane)});
+caption.textContent=(i+1)+' / '+frames.length+' — '+f.caption;
+document.getElementById('step').disabled=i===frames.length-1;}
+function pause(){clearInterval(timer);timer=null}
+function step(){if(i<frames.length-1){i++;draw()}if(i===frames.length-1)pause()}
+document.getElementById('play').onclick=()=>{if(timer!==null)return;if(i===frames.length-1)i=0;draw();timer=setInterval(step,1500)};
+document.getElementById('pause').onclick=pause;document.getElementById('step').onclick=()=>{pause();step()};
+document.getElementById('reset').onclick=()=>{pause();i=0;draw()};draw();
+</script></html>
+

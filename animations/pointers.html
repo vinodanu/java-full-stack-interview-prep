@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sliding window and two pointers</title>
+<style>
+body{font:16px system-ui;background:#101827;color:#eef3ff;max-width:1000px;margin:32px auto;padding:16px}
+button{padding:10px 16px;margin:4px;cursor:pointer} #stage{display:flex;gap:16px;flex-wrap:wrap;margin:24px 0}
+section{background:#1e2b42;padding:16px;border-radius:12px;flex:1;min-width:180px}
+.node{padding:12px;margin:8px 0;background:#314967;border-radius:6px;white-space:pre-wrap;transition:background .4s}
+.active{background:#12674f} #caption{min-height:60px} small{color:#bdcce5}
+</style>
+<h1>Sliding window and two pointers</h1><button id="play">Play</button><button id="pause">Pause</button><button id="step">Step</button><button id="reset">Reset</button>
+<div id="stage" aria-label="Animation diagram"></div><p id="caption" aria-live="polite"></p><small>Two separate algorithms on [1,2,3,4,5]. Window size 3; two-pointer target 6 on sorted input.</small>
+<script>
+const frames=[{"caption":"Sliding window: start with indexes [0,2], sum 6.","lanes":[["Array",["*1[L]  2  3[R]  4  5"]],["Window",["sum=1+2+3=6","best=6"]]]},{"caption":"Slide once: subtract outgoing 1, add incoming 4.","lanes":[["Array",["1  *2[L]  3  4[R]  5"]],["Window",["sum=6−1+4=9","best=9"]]]},{"caption":"Slide again: subtract 2, add 5; best sum is 12.","lanes":[["Array",["1  2  *3[L]  4  5[R]"]],["Window",["sum=9−2+5=12","best=12"]]]},{"caption":"Two pointers: reset L=0, R=4. 1+5=6 is a match.","lanes":[["Array",["*1[L]  2  3  4  5[R]"]],["Pairs",["Found (1,5); move both to enumerate unique pairs"]]]},{"caption":"L=1, R=3: 2+4=6 is another match.","lanes":[["Array",["1  *2[L]  3  4[R]  5"]],["Pairs",["Found (2,4); move both"]]]},{"caption":"Pointers meet: stop; one array element cannot be used twice.","lanes":[["Array",["1  2  *3[L=R]  4  5"]],["Rules",["sum < target: L++","sum > target: R--","Sorted order makes elimination safe"]]]}];
+let i=0,timer=null;
+const stage=document.getElementById('stage'),caption=document.getElementById('caption');
+function draw(){stage.replaceChildren();const f=frames[i];f.lanes.forEach(([name,items])=>{
+const lane=document.createElement('section'),h=document.createElement('h2');h.textContent=name;lane.append(h);
+items.forEach(text=>{const n=document.createElement('div');n.className='node'+(text.startsWith('*')?' active':'');n.textContent=text.replace(/^\*/,'');lane.append(n)});stage.append(lane)});
+caption.textContent=(i+1)+' / '+frames.length+' — '+f.caption;
+document.getElementById('step').disabled=i===frames.length-1;}
+function pause(){clearInterval(timer);timer=null}
+function step(){if(i<frames.length-1){i++;draw()}if(i===frames.length-1)pause()}
+document.getElementById('play').onclick=()=>{if(timer!==null)return;if(i===frames.length-1)i=0;draw();timer=setInterval(step,1500)};
+document.getElementById('pause').onclick=pause;document.getElementById('step').onclick=()=>{pause();step()};
+document.getElementById('reset').onclick=()=>{pause();i=0;draw()};draw();
+</script></html>
+

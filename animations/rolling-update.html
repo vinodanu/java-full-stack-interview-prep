@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kubernetes rolling update</title>
+<style>
+body{font:16px system-ui;background:#101827;color:#eef3ff;max-width:1000px;margin:32px auto;padding:16px}
+button{padding:10px 16px;margin:4px;cursor:pointer} #stage{display:flex;gap:16px;flex-wrap:wrap;margin:24px 0}
+section{background:#1e2b42;padding:16px;border-radius:12px;flex:1;min-width:180px}
+.node{padding:12px;margin:8px 0;background:#314967;border-radius:6px;white-space:pre-wrap;transition:background .4s}
+.active{background:#12674f} #caption{min-height:60px} small{color:#bdcce5}
+</style>
+<h1>Kubernetes rolling update</h1><button id="play">Play</button><button id="pause">Pause</button><button id="step">Step</button><button id="reset">Reset</button>
+<div id="stage" aria-label="Animation diagram"></div><p id="caption" aria-live="polite"></p><small>Desired replicas 3; maxSurge 1; maxUnavailable 0; sufficient capacity and successful readiness checks assumed.</small>
+<script>
+const frames=[{"caption":"All three v1 pods are Ready and receive service traffic.","lanes":[["v1",["*A Ready","*B Ready","*C Ready"]],["v2",["None"]],["Ready endpoints",["A B C"]]]},{"caption":"Create D(v2); four pods exist, but D is not Ready.","lanes":[["v1",["A Ready","B Ready","C Ready"]],["v2",["*D Starting"]],["Ready endpoints",["A B C"]]]},{"caption":"D becomes Ready; there are four ready endpoints.","lanes":[["v1",["A Ready","B Ready","C Ready"]],["v2",["*D Ready"]],["Ready endpoints",["A B C D"]]]},{"caption":"Drain A; create E. B,C,D maintain three Ready replicas.","lanes":[["v1",["*A Terminating","B Ready","C Ready"]],["v2",["D Ready","*E Starting"]],["Ready endpoints",["B C D"]]]},{"caption":"E becomes Ready; drain B, create F.","lanes":[["v1",["*B Terminating","C Ready"]],["v2",["D Ready","E Ready","*F Starting"]],["Ready endpoints",["C D E"]]]},{"caption":"F becomes Ready; drain C.","lanes":[["v1",["*C Terminating"]],["v2",["*D Ready","*E Ready","*F Ready"]],["Ready endpoints",["D E F"]]]},{"caption":"Rollout complete. If new pods never become Ready, rollout stalls.","lanes":[["v2",["*D Ready","*E Ready","*F Ready"]],["Availability",["Readiness gates traffic","Graceful shutdown drains in-flight work","Terminating pods can temporarily raise total pod count"]]]}];
+let i=0,timer=null;
+const stage=document.getElementById('stage'),caption=document.getElementById('caption');
+function draw(){stage.replaceChildren();const f=frames[i];f.lanes.forEach(([name,items])=>{
+const lane=document.createElement('section'),h=document.createElement('h2');h.textContent=name;lane.append(h);
+items.forEach(text=>{const n=document.createElement('div');n.className='node'+(text.startsWith('*')?' active':'');n.textContent=text.replace(/^\*/,'');lane.append(n)});stage.append(lane)});
+caption.textContent=(i+1)+' / '+frames.length+' — '+f.caption;
+document.getElementById('step').disabled=i===frames.length-1;}
+function pause(){clearInterval(timer);timer=null}
+function step(){if(i<frames.length-1){i++;draw()}if(i===frames.length-1)pause()}
+document.getElementById('play').onclick=()=>{if(timer!==null)return;if(i===frames.length-1)i=0;draw();timer=setInterval(step,1500)};
+document.getElementById('pause').onclick=pause;document.getElementById('step').onclick=()=>{pause();step()};
+document.getElementById('reset').onclick=()=>{pause();i=0;draw()};draw();
+</script></html>
+

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HashMap put</title>
+<style>
+body{font:16px system-ui;background:#101827;color:#eef3ff;max-width:1000px;margin:32px auto;padding:16px}
+button{padding:10px 16px;margin:4px;cursor:pointer} #stage{display:flex;gap:16px;flex-wrap:wrap;margin:24px 0}
+section{background:#1e2b42;padding:16px;border-radius:12px;flex:1;min-width:180px}
+.node{padding:12px;margin:8px 0;background:#314967;border-radius:6px;white-space:pre-wrap;transition:background .4s}
+.active{background:#12674f} #caption{min-height:60px} small{color:#bdcce5}
+</style>
+<h1>HashMap put</h1><button id="play">Play</button><button id="pause">Pause</button><button id="step">Step</button><button id="reset">Reset</button>
+<div id="stage" aria-label="Animation diagram"></div><p id="caption" aria-live="polite"></p><small>Schematic Java 17 put path. Tree shape illustrates ordering, not exact red-black rotations.</small>
+<script>
+const frames=[{"caption":"Start with capacity 4 and load factor 0.75; resize threshold is 3.","lanes":[["Table",["0: empty","1: empty","2: empty","3: empty"]]]},{"caption":"A.hashCode() = 1; spread = h ^ (h >>> 16) = 1.","lanes":[["Hash",["*A → h=1 → spread=1"]],["Index",["(4 − 1) & 1 = 1"]]]},{"caption":"Insert A into empty bucket 1.","lanes":[["Capacity 4",["0: empty","*1: A","2: empty","3: empty"]]]},{"caption":"B has hash 5; 3 & 5 = 1. Unequal keys collide and form a chain.","lanes":[["Hash",["*B → spread=5 → index 1"]],["Capacity 4",["0: empty","*1: A → B","2: empty","3: empty"]]]},{"caption":"Insert C(hash 2) and D(hash 3). Size 4 exceeds threshold 3.","lanes":[["Capacity 4",["0: empty","1: A → B","2: C","*3: D"]]]},{"caption":"Resize 4 → 8. A stays at 1; B moves to 1+4 because (5 & 4) != 0.","lanes":[["Capacity 8",["1: A","2: C","3: D","*5: B"]],["Split rule",["(storedHash & oldCapacity) == 0: stay","Otherwise: old index + old capacity"]]]},{"caption":"Separate collision case: capacity 64, eight distinct comparable keys share hash 1.","lanes":[["Bucket 1",["*K1 → K2 → K3 → K4 → K5 → K6 → K7 → K8"]],["Table",["capacity=64; size=8"]]]},{"caption":"Ordinary put of K9 into the eight-node chain invokes treeification at capacity ≥64.","lanes":[["Bucket 1: tree schematic",["*            K5","       K3          K7","    K2   K4     K6    K8"," K1                       K9"]],["Rules",["TREEIFY_THRESHOLD=8","MIN_TREEIFY_CAPACITY=64","Below 64: resize instead"]]]}];
+let i=0,timer=null;
+const stage=document.getElementById('stage'),caption=document.getElementById('caption');
+function draw(){stage.replaceChildren();const f=frames[i];f.lanes.forEach(([name,items])=>{
+const lane=document.createElement('section'),h=document.createElement('h2');h.textContent=name;lane.append(h);
+items.forEach(text=>{const n=document.createElement('div');n.className='node'+(text.startsWith('*')?' active':'');n.textContent=text.replace(/^\*/,'');lane.append(n)});stage.append(lane)});
+caption.textContent=(i+1)+' / '+frames.length+' — '+f.caption;
+document.getElementById('step').disabled=i===frames.length-1;}
+function pause(){clearInterval(timer);timer=null}
+function step(){if(i<frames.length-1){i++;draw()}if(i===frames.length-1)pause()}
+document.getElementById('play').onclick=()=>{if(timer!==null)return;if(i===frames.length-1)i=0;draw();timer=setInterval(step,1500)};
+document.getElementById('pause').onclick=pause;document.getElementById('step').onclick=()=>{pause();step()};
+document.getElementById('reset').onclick=()=>{pause();i=0;draw()};draw();
+</script></html>
+
